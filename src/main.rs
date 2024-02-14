@@ -1,19 +1,12 @@
-use crate::ciphers::skinny::Skinny;
-use crate::ciphers::SymmetricCipher;
-use crate::matrix::Matrix;
 
 mod matrix;
 mod ciphers;
+mod lfsr;
 
 fn main() {
-    let skinny_64_64 = Skinny::v64();
-    let key = Matrix::new(4, 4, vec![0xf, 0x5, 0x2, 0x6, 0x9, 0x8, 0x2, 0x6, 0xf, 0xc, 0x6, 0x8, 0x1, 0x2, 0x3, 0x8]);
-    let mut plaintext = Matrix::new(4, 4, vec![0x0, 0x6, 0x0, 0x3, 0x4, 0xf, 0x9, 0x5, 0x7, 0x7, 0x2, 0x4, 0xd, 0x1, 0x9, 0xd]);
-    println!("{:X?}", key.values);
-    println!("{:X?}", plaintext.values);
-    skinny_64_64.cipher(&key, &mut plaintext);
-    println!("---");
-    println!("{:X?}", plaintext.values);
+
+
+
 }
 
 
