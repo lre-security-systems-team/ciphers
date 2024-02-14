@@ -13,7 +13,7 @@ impl <T: Debug> Debug for Matrix<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in 0..self.m {
             for col in 0..self.n {
-                f.write_fmt(format_args!("{:?}", self[(row, col)]))?;
+                f.write_fmt(format_args!("{:?} ", self[(row, col)]))?;
             }
             f.write_str("\n")?;
         }
@@ -49,6 +49,7 @@ impl<T> Matrix<T> {
         }
     }
     pub fn new(m: usize, n: usize, values: Vec<T>) -> Matrix<T> {
+        assert_eq!(m * n, values.len());
         Matrix { m, n, values }
     }
 
