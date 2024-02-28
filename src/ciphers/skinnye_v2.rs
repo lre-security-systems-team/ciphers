@@ -41,10 +41,12 @@ impl SKINNYe_v2 {
         }
     }
 
+    #[inline]
     fn nr(&self, tk: usize) -> usize {
         self.r.unwrap_or(NR[tk - 1])
     }
 
+    #[inline]
     fn key_schedule(&self, key: &Matrix<u8>, tk: usize) -> Vec<Vec<Matrix<u8>>> {
         let flattened_tk = key.values
             .chunks(16)
@@ -76,44 +78,21 @@ impl SKINNYe_v2 {
         round_tweakeys
     }
 
+    #[inline]
     fn lfsr(&self, i: usize, value: u8) -> u8 {
         self.lfsrs[i - 2].eval(value as usize) as u8
     }
 
+    #[inline]
     fn add_round_tweak_key(&self, internal_state: &mut Matrix<u8>, round_tweak_key: &Vec<Matrix<u8>>, tk: usize) {
-        match tk {
-            1 => {
-                for i in 0..=1 {
-                    for j in 0..4 {
-                        internal_state[(i, j)] ^= round_tweak_key[1][(i, j)];
-                    }
-                }
+        for i in 0..=1 {
+            for j in 0..4 {
+                internal_state[(i, j)] ^= (1..=tk).fold(0, |acc, z| acc ^ round_tweak_key[z][(i, j)]);
             }
-            2 => {
-                for i in 0..=1 {
-                    for j in 0..4 {
-                        internal_state[(i, j)] ^= round_tweak_key[1][(i, j)] ^ round_tweak_key[2][(i, j)];
-                    }
-                }
-            }
-            3 => {
-                for i in 0..=1 {
-                    for j in 0..4 {
-                        internal_state[(i, j)] ^= round_tweak_key[1][(i, j)] ^ round_tweak_key[2][(i, j)] ^ round_tweak_key[3][(i, j)];
-                    }
-                }
-            }
-            4 => {
-                for i in 0..=1 {
-                    for j in 0..4 {
-                        internal_state[(i, j)] ^= round_tweak_key[1][(i, j)] ^ round_tweak_key[2][(i, j)] ^ round_tweak_key[3][(i, j)] ^ round_tweak_key[4][(i, j)];
-                    }
-                }
-            }
-            _ => panic!("Invalid tweak_key size: {}", round_tweak_key.len())
         }
     }
 
+    #[inline]
     fn add_constants(&self, internal_state: &mut Matrix<u8>, r: usize) {
         let rc = RC[r];
         let c0 = rc & 0xF;
@@ -124,11 +103,13 @@ impl SKINNYe_v2 {
         internal_state[(2, 0)] ^= c2;
     }
 
+    #[inline]
     fn sub_cells(&self, internal_state: &mut Matrix<u8>) {
         internal_state.iter_mut()
             .for_each(|it| *it = SKINNY_64_SBOX[*it as usize])
     }
 
+    #[inline]
     fn shift_rows(&self, internal_state: &mut Matrix<u8>) {
         let mut copy = internal_state.clone();
         for row in 1..4 {
@@ -139,24 +120,19 @@ impl SKINNYe_v2 {
         swap(&mut copy, internal_state);
     }
 
+    #[inline]
     fn mix_columns(&self, internal_state: &mut Matrix<u8>) {
-        let mut mix1 = vec![0; 4];
+        let mut tmp: u8;
         for j in 0..4 {
-            mix1[j] = internal_state[(1, j)] ^ internal_state[(2, j)];
-        }
-        let mut mix2 = vec![0; 4];
-        for j in 0..4 {
-            mix2[j] = internal_state[(0, j)] ^ internal_state[(2, j)];
-        }
-        let mut mix3 = vec![0; 4];
-        for j in 0..4 {
-            mix3[j] = internal_state[(3, j)] ^ mix2[j];
-        }
-        for j in 0..4 {
+            internal_state[(1, j)] ^= internal_state[(2, j)];
+            internal_state[(2, j)] ^= internal_state[(0, j)];
+            internal_state[(3, j)] ^= internal_state[(2, j)];
+
+            tmp = internal_state[(3, j)];
+            internal_state[(3, j)] = internal_state[(2, j)];
+            internal_state[(2, j)] = internal_state[(1, j)];
             internal_state[(1, j)] = internal_state[(0, j)];
-            internal_state[(0, j)] = mix3[j];
-            internal_state[(2, j)] = mix1[j];
-            internal_state[(3, j)] = mix2[j];
+            internal_state[(0, j)] = tmp;
         }
     }
 }
