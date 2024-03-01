@@ -8,6 +8,10 @@ edition = "2021"
 name = "evaluate-sk-dc-for-skinny"
 path = "src/bin/evaluate-sk-dc-for-skinny.rs"
 
+[[bin]]
+name = "evaluate-sk-rtk-dc-for-skinnyee"
+path = "src/bin/evaluate-sk-rtk-dc-for-skinnyee.rs"
+
 [dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
 rand = "0.8.5"

@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Formatter, Write};
 use std::ops::{BitXor, BitXorAssign, Index, IndexMut};
 use std::slice::{Iter, IterMut};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -13,10 +13,12 @@ pub struct Matrix<T> {
 impl<T: Debug> Debug for Matrix<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         for row in 0..self.m {
+            let mut row_serializer  = f.debug_list();
             for col in 0..self.n {
-                f.write_fmt(format_args!("{:?} ", self[(row, col)]))?;
+                row_serializer.entry(&self[(row, col)]);
             }
-            f.write_str("\n")?;
+            row_serializer.finish()?;
+            f.write_char('\n')?;
         }
         Ok(())
     }
