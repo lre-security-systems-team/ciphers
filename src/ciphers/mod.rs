@@ -4,5 +4,6 @@ pub mod skinnyee;
 
 pub trait SymmetricCipher<K, T> {
     fn cipher(&self, key: &K, plaintext: &mut T);
+    fn decipher(&self, key: &K, plaintext: &mut T);
 }
 

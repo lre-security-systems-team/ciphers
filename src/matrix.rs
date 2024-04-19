@@ -1,7 +1,6 @@
 use std::fmt::{Debug, Formatter, Write};
 use std::ops::{BitXor, BitXorAssign, Index, IndexMut};
 use std::slice::{Iter, IterMut};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 
 pub struct Matrix<T> {
@@ -105,19 +104,13 @@ impl BitXor for Matrix<u8> {
 
 impl BitXorAssign for Matrix<u8> {
     fn bitxor_assign(&mut self, rhs: Self) {
+        *self ^= &rhs;
+    }
+}
+
+impl BitXorAssign<&Matrix<u8>> for Matrix<u8> {
+    fn bitxor_assign(&mut self, rhs: &Matrix<u8>) {
         assert!(self.m == rhs.m && self.n == rhs.n);
-        self.values.iter_mut().zip(rhs.values).for_each(|(l, r)| *l ^= r);
-    }
-}
-
-impl Serialize for Matrix<u8> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
-        todo!()
-    }
-}
-
-impl <'de> Deserialize<'de> for Matrix<u8> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de> {
-        todo!()
+        self.values.iter_mut().zip(rhs.values.iter()).for_each(|(l, r)| *l ^= *r);
     }
 }

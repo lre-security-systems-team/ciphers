@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use crate::matrix::Matrix;
 
 #[derive(Serialize, Deserialize)]
 pub struct SingleKeySkinnyDifferentialCharacteristic {

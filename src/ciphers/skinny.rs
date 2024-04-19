@@ -213,6 +213,10 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNY {
             self.mix_columns(plaintext);
         }
     }
+
+    fn decipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
+        todo!()
+    }
 }
 
 #[cfg(test)]

@@ -1,14 +1,17 @@
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+use clap::Parser;
 use rand::{RngCore, SeedableRng};
 use rand_xoshiro::Xoshiro256StarStar;
+
 use ciphers::skinny::SKINNY;
+
 use crate::ciphers::SymmetricCipher;
-use crate::matrix::Matrix;
 use crate::differential_characteristics::sk_skinny::SingleKeySkinnyDifferentialCharacteristic;
-use clap::{Parser};
+use crate::matrix::Matrix;
 
 #[path = "../matrix.rs"]
 mod matrix;
@@ -21,8 +24,8 @@ mod differential_characteristics;
 
 #[derive(Copy, Clone, clap::ValueEnum)]
 enum Version {
-    v64,
-    v128,
+    V64,
+    V128,
 }
 
 #[derive(Parser)]
@@ -51,12 +54,12 @@ fn main() -> io::Result<()> {
     let dc: SingleKeySkinnyDifferentialCharacteristic = serde_json::de::from_reader(reader)?;
 
     let (cipher, mask) = match args.version {
-        Version::v64 => (SKINNY::v64_with_rounds(dc.x.len() - 1), 0xF),
-        Version::v128 => (SKINNY::v128_with_rounds(dc.x.len() - 1), 0xFF),
+        Version::V64 => (SKINNY::v64_with_rounds(dc.x.len() - 1), 0xF),
+        Version::V128 => (SKINNY::v128_with_rounds(dc.x.len() - 1), 0xFF),
     };
 
     let input_difference = dc.x.first().unwrap().iter().flatten().cloned().collect::<Vec<_>>();
-    let mut input_difference = Matrix::new(4, 4, input_difference);
+    let input_difference = Matrix::new(4, 4, input_difference);
 
     let output_difference = dc.x.last().unwrap().iter().flatten().cloned().collect::<Vec<_>>();
     let mut output_difference = Matrix::new(4, 4, output_difference);
