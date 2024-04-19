@@ -150,6 +150,10 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNYe_v2 {
             self.mix_columns(plaintext);
         }
     }
+
+    fn decipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
+        todo!()
+    }
 }
 
 #[cfg(test)]
