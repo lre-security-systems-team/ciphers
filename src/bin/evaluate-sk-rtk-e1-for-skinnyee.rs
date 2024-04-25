@@ -11,7 +11,7 @@ use crate::ciphers::skinnyee::SKINNYee;
 use crate::differential_characteristics::sk_boom_rtk_skinnyee::SingleKeyRelatedTweakeySkinnyEEBoomerangCharacteristic;
 use crate::matrix::Matrix;
 use crate::skinnyee_boomerang_cli_args::Args;
-use crate::skinnyee_common::{compute_tk_xor_tweakey_difference, evaluate_boomerang, fill_random_key_and_tweakey};
+use crate::skinnyee_common::{compute_tk_xor_tweakey_difference, evaluate_differential_characteristic, fill_random_key_and_tweakey};
 use crate::skinnyee_plaintext_generator::SkinnyeePlaintextGenerator;
 
 #[path = "../matrix.rs"]
@@ -46,60 +46,35 @@ fn main() -> io::Result<()> {
     let reader = BufReader::new(path);
     let dc: SingleKeyRelatedTweakeySkinnyEEBoomerangCharacteristic = serde_json::de::from_reader(reader)?;
 
-    let (cipher, mask) = (SKINNYee::with_rounds(dc.rm), 0xF);
+    let (cipher, mask) = (SKINNYee::with_rounds(dc.r1 - dc.rm), 0xF);
 
-    let e0_input_difference = dc.e0_em.x[dc.r0 - dc.rm].iter().flatten().cloned().collect::<Vec<_>>();
-    let e0_input_difference = Matrix::new(4, 4, e0_input_difference);
+    let e1_input_difference = dc.em_e1.x[dc.rm].iter().flatten().cloned().collect::<Vec<_>>();
+    let e1_input_difference = Matrix::new(4, 4, e1_input_difference);
 
-    let e1_output_difference = dc.em_e1.x[dc.rm + 1].iter().flatten().cloned().collect::<Vec<_>>();
+    let e1_output_difference = dc.em_e1.x[dc.r1].iter().flatten().cloned().collect::<Vec<_>>();
     let e1_output_difference = Matrix::new(4, 4, e1_output_difference);
 
-    let e0_tk0_difference = dc.e0_em.tk[0][dc.r0 - dc.rm].clone();
-    let e0_tk0_difference = Matrix::new(4, 4, e0_tk0_difference);
-
-    let e0_tk1_difference = dc.e0_em.tk[1][dc.r0 - dc.rm].clone();
-    let e0_tk1_difference = Matrix::new(4, 4, e0_tk1_difference);
-
-    let e0_tk2_difference = dc.e0_em.tk[2][dc.r0 - dc.rm].clone();
-    let e0_tk2_difference = Matrix::new(4, 4, e0_tk2_difference);
-
-    let e0_tk3_difference = dc.e0_em.tk[3][dc.r0 - dc.rm].clone();
-    let e0_tk3_difference = Matrix::new(4, 4, e0_tk3_difference);
-
-    let e1_tk0_difference = dc.em_e1.tk[0][0].clone();
+    let e1_tk0_difference = dc.em_e1.tk[0][dc.rm].clone();
     let e1_tk0_difference = Matrix::new(4, 4, e1_tk0_difference);
 
-    let e1_tk1_difference = dc.em_e1.tk[1][0].clone();
+    let e1_tk1_difference = dc.em_e1.tk[1][dc.rm].clone();
     let e1_tk1_difference = Matrix::new(4, 4, e1_tk1_difference);
 
-    let e1_tk2_difference = dc.em_e1.tk[2][0].clone();
+    let e1_tk2_difference = dc.em_e1.tk[2][dc.rm].clone();
     let e1_tk2_difference = Matrix::new(4, 4, e1_tk2_difference);
 
-    let e1_tk3_difference = dc.em_e1.tk[3][0].clone();
+    let e1_tk3_difference = dc.em_e1.tk[3][dc.rm].clone();
     let e1_tk3_difference = Matrix::new(4, 4, e1_tk3_difference);
+
     let mut number_of_valid_pairs: usize = 0;
-    let nb_tries_per_key = args.nb_tries_per_key.unwrap_or(1 << (dc.e0_em.objective + dc.em_e1.objective + 2));
+    let nb_tries_per_key = args.nb_tries_per_key.unwrap_or(1 << (dc.em_e1.objective + 2));
 
     let mut key_and_tweakey = vec![0; 100];
     for key_no in 0..args.nb_key {
         fill_random_key_and_tweakey(&mut rand, &mut key_and_tweakey, mask);
         let key_and_tweakey = Matrix::new(25, 4, key_and_tweakey.clone());
-        let tk_xor_tke0 = compute_tk_xor_tweakey_difference(
-            &key_and_tweakey,
-            &e0_tk0_difference,
-            &e0_tk1_difference,
-            &e0_tk2_difference,
-            &e0_tk3_difference
-        );
         let tk_xor_tke1 = compute_tk_xor_tweakey_difference(
             &key_and_tweakey,
-            &e1_tk0_difference,
-            &e1_tk1_difference,
-            &e1_tk2_difference,
-            &e1_tk3_difference
-        );
-        let tk_xor_tke0_xor_tke1 = compute_tk_xor_tweakey_difference(
-            &tk_xor_tke0,
             &e1_tk0_difference,
             &e1_tk1_difference,
             &e1_tk2_difference,
@@ -109,13 +84,13 @@ fn main() -> io::Result<()> {
         let generator = SkinnyeePlaintextGenerator::new(&mut rand);
         let number_of_valid_pairs_for_key: usize = generator.take(nb_tries_per_key)
             .par_bridge()
-            .map(|p0| evaluate_boomerang(
-                &cipher, &key_and_tweakey, p0,
-                &e0_input_difference,
+            .map(|p0| evaluate_differential_characteristic(
+                &cipher,
+                &key_and_tweakey,
+                p0,
+                &e1_input_difference,
                 &e1_output_difference,
-                &tk_xor_tke0,
-                &tk_xor_tke1,
-                &tk_xor_tke0_xor_tke1
+                &tk_xor_tke1
             ))
             .fold(|| 0usize, |a, b| a + b)
             .sum();

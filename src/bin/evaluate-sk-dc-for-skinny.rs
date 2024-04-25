@@ -62,9 +62,9 @@ fn main() -> io::Result<()> {
     let input_difference = Matrix::new(4, 4, input_difference);
 
     let output_difference = dc.x.last().unwrap().iter().flatten().cloned().collect::<Vec<_>>();
-    let mut output_difference = Matrix::new(4, 4, output_difference);
+    let output_difference = Matrix::new(4, 4, output_difference);
 
-    let mut number_of_valid_pairs: i32 = 0;
+    let mut number_of_valid_pairs: usize = 0;
     let nb_tries_per_key = args.nb_tries_per_key.unwrap_or(1 << (dc.objective + 2));
 
     for _ in 0..args.nb_key {

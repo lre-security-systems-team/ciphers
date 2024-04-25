@@ -45,12 +45,14 @@ const PT: [usize; 16] = [
     9, 15, 8, 13, 10, 14, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7
 ];
 
+#[allow(dead_code)]
 pub enum SKINNY {
     Skinny64 { r: Option<usize>, lfsrs: Vec<LFSR<4>> },
     Skinny128 { r: Option<usize>, lfsrs: Vec<LFSR<8>> },
 }
 
 impl SKINNY {
+    #[allow(dead_code)]
     pub fn v64() -> SKINNY {
         SKINNY::Skinny64 {
             r: None,
@@ -61,6 +63,7 @@ impl SKINNY {
         }
     }
 
+    #[allow(dead_code)]
     pub fn v64_with_rounds(rounds: usize) -> SKINNY {
         SKINNY::Skinny64 {
             r: Some(rounds),
@@ -71,6 +74,7 @@ impl SKINNY {
         }
     }
 
+    #[allow(dead_code)]
     pub fn v128() -> SKINNY {
         SKINNY::Skinny128 {
             r: None,
@@ -80,6 +84,7 @@ impl SKINNY {
             ],
         }
     }
+    #[allow(dead_code)]
     pub fn v128_with_rounds(rounds: usize) -> SKINNY {
         SKINNY::Skinny128 {
             r: Some(rounds),
@@ -214,7 +219,7 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNY {
         }
     }
 
-    fn decipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
+    fn decipher(&self, _key: &Matrix<u8>, _plaintext: &mut Matrix<u8>) {
         todo!()
     }
 }

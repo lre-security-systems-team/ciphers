@@ -30,6 +30,8 @@ pub struct SKINNYe_v2 {
 }
 
 impl SKINNYe_v2 {
+
+    #[allow(dead_code)]
     pub fn default() -> SKINNYe_v2 {
         SKINNYe_v2 {
             r: None,
@@ -151,7 +153,7 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNYe_v2 {
         }
     }
 
-    fn decipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
+    fn decipher(&self, _key: &Matrix<u8>, _plaintext: &mut Matrix<u8>) {
         todo!()
     }
 }

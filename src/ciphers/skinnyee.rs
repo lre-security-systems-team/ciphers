@@ -33,6 +33,7 @@ pub struct SKINNYee {
 }
 
 impl SKINNYee {
+    #[allow(dead_code)]
     pub fn default() -> SKINNYee {
         SKINNYee {
             r: Some(NR),
@@ -52,6 +53,7 @@ impl SKINNYee {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_rounds(r: usize) -> SKINNYee {
         SKINNYee {
             r: Some(r),
@@ -109,6 +111,7 @@ impl SKINNYee {
     }
 
     #[inline]
+    #[allow(dead_code)]
     pub fn inv_nr_tweak_key_schedule(&self, key: &Matrix<u8>, nr: usize) -> Vec<Vec<Matrix<u8>>> {
         let flattened_tk = key.values
             .chunks(16)
@@ -330,7 +333,7 @@ impl SKINNYee {
 
 impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNYee {
     fn cipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
-        let (key, tweak, mut rc_init) = self.split_key(key);
+        let (key, tweak, rc_init) = self.split_key(key);
         let round_tweak_keys = self.tweak_key_schedule(&tweak);
         let rc = self.generate_constants(rc_init);
         for round_num in 0..self.nr() {
@@ -343,7 +346,7 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNYee {
     }
 
     fn decipher(&self, key: &Matrix<u8>, plaintext: &mut Matrix<u8>) {
-        let (key, tweak, mut rc_init) = self.split_key(key);
+        let (key, tweak, rc_init) = self.split_key(key);
         let round_tweak_keys = self.tweak_key_schedule(&tweak);
         let rc = self.generate_constants(rc_init);
         for round_num in (0..self.nr()).rev() {
