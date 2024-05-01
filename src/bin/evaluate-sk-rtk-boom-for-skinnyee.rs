@@ -1,11 +1,13 @@
 use std::fs::File;
 use std::io;
 use std::io::BufReader;
-use ::rand::{SeedableRng};
 
+use ::rand::SeedableRng;
 use clap::Parser;
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand_chacha::ChaCha8Rng;
 use rayon::prelude::*;
+
 use crate::ciphers::skinnyee::SKINNYee;
 use crate::differential_characteristics::sk_boom_rtk_skinnyee::SingleKeyRelatedTweakeySkinnyEEBoomerangCharacteristic;
 use crate::matrix::Matrix;
@@ -89,34 +91,39 @@ fn main() -> io::Result<()> {
             &e0_tk0_difference,
             &e0_tk1_difference,
             &e0_tk2_difference,
-            &e0_tk3_difference
+            &e0_tk3_difference,
         );
         let tk_xor_tke1 = compute_tk_xor_tweakey_difference(
             &key_and_tweakey,
             &e1_tks_difference[1],
             &e1_tks_difference[2],
             &e1_tks_difference[3],
-            &e1_tks_difference[4]
+            &e1_tks_difference[4],
         );
         let tk_xor_tke0_xor_tke1 = compute_tk_xor_tweakey_difference(
             &tk_xor_tke0,
             &e1_tks_difference[1],
             &e1_tks_difference[2],
             &e1_tks_difference[3],
-            &e1_tks_difference[4]
+            &e1_tks_difference[4],
         );
 
+        let progress_bar = ProgressBar::new(nb_tries_per_key as u64)
+            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} {eta}").unwrap());
         let generator = SkinnyeePlaintextGenerator::new(&mut rand);
         let number_of_valid_pairs_for_key: usize = generator.take(nb_tries_per_key)
             .par_bridge()
-            .map(|p0| evaluate_boomerang(
-                &cipher, &key_and_tweakey, p0,
-                &e0_input_difference,
-                &e1_output_difference,
-                &tk_xor_tke0,
-                &tk_xor_tke1,
-                &tk_xor_tke0_xor_tke1
-            ))
+            .progress_with(progress_bar)
+            .map(|p0| {
+                evaluate_boomerang(
+                    &cipher, &key_and_tweakey, p0,
+                    &e0_input_difference,
+                    &e1_output_difference,
+                    &tk_xor_tke0,
+                    &tk_xor_tke1,
+                    &tk_xor_tke0_xor_tke1,
+                )
+            })
             .fold(|| 0usize, |a, b| a + b)
             .sum();
 

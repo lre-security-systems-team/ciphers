@@ -3,6 +3,7 @@ use std::io;
 use std::io::BufReader;
 
 use clap::Parser;
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::{SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use rayon::prelude::*;
@@ -80,10 +81,12 @@ fn main() -> io::Result<()> {
             &e1_tk2_difference,
             &e1_tk3_difference
         );
-
+        let progress_bar = ProgressBar::new(nb_tries_per_key as u64)
+            .with_style(ProgressStyle::with_template("{wide_bar} {pos}/{len} {eta}").unwrap());
         let generator = SkinnyeePlaintextGenerator::new(&mut rand);
         let number_of_valid_pairs_for_key: usize = generator.take(nb_tries_per_key)
             .par_bridge()
+            .progress_with(progress_bar)
             .map(|p0| evaluate_differential_characteristic(
                 &cipher,
                 &key_and_tweakey,
