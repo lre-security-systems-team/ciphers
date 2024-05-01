@@ -17,8 +17,9 @@ impl <'r> Iterator for SkinnyeePlaintextGenerator<'r> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut plaintext = Vec::with_capacity(16);
-        for _ in 0..16 {
-            plaintext.push(self.rand.next_u32() as u8 & 0xF);
+        let key = self.rand.next_u64();
+        for i in 0..16 {
+            plaintext.push((key >> (i * 4) & 0xF) as u8);
         }
         Some(Matrix::new(4, 4, plaintext))
     }

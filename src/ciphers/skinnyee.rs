@@ -17,7 +17,7 @@ const TK: usize = 4;
 const NR: usize = 56;
 
 const PT: [usize; 16] = [
-        9, 15, 8, 13, 10, 14, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7
+    9, 15, 8, 13, 10, 14, 12, 11, 0, 1, 2, 3, 4, 5, 6, 7
 ];
 
 const INV_PT: [usize; 16] = [
@@ -80,23 +80,22 @@ impl SKINNYee {
 
     #[inline]
     fn nr_tweak_key_schedule(&self, key: &Matrix<u8>, nr: usize) -> Vec<Vec<Matrix<u8>>> {
-        let flattened_tk = key.values
+        let mut round_tweakey = key.values
             .chunks(16)
-            .collect::<Vec<_>>();
-        let mut round_tweakey = flattened_tk.iter()
             .map(|sub_key| {
                 Matrix::new(4, 4, sub_key.to_vec())
             }).collect::<Vec<_>>();
         round_tweakey.insert(0, Matrix::empty());
-        let mut round_tweakeys = Vec::with_capacity(nr);
+        let mut round_tweakeys = Vec::with_capacity(nr + 1);
         round_tweakeys.push(round_tweakey.clone());
+        let mut permuted = vec![0; 16];
         for _ in 1..=nr {
             for z in 1..=TK {
                 let flattened_tk = &round_tweakey[z].values;
-                let permuted = (0..16)
-                    .map(|idx| flattened_tk[PT[idx]])
-                    .collect::<Vec<_>>();
-                round_tweakey[z] = Matrix::new(4, 4, permuted);
+                for idx in 0..16 {
+                    permuted[idx] = flattened_tk[PT[idx]]
+                }
+                swap(&mut round_tweakey[z].values, &mut permuted);
             }
             for z in 2..=TK {
                 for i in 0..2 {
@@ -113,16 +112,15 @@ impl SKINNYee {
     #[inline]
     #[allow(dead_code)]
     pub fn inv_nr_tweak_key_schedule(&self, key: &Matrix<u8>, nr: usize) -> Vec<Vec<Matrix<u8>>> {
-        let flattened_tk = key.values
+        let mut round_tweakey = key.values
             .chunks(16)
-            .collect::<Vec<_>>();
-        let mut round_tweakey = flattened_tk.iter()
             .map(|sub_key| {
                 Matrix::new(4, 4, sub_key.to_vec())
             }).collect::<Vec<_>>();
         round_tweakey.insert(0, Matrix::empty());
-        let mut round_tweakeys = Vec::with_capacity(nr);
+        let mut round_tweakeys = Vec::with_capacity(nr + 1);
         round_tweakeys.push(round_tweakey.clone());
+        let mut permuted = vec![0; 16];
         for _ in 1..=nr {
             for z in 2..=TK {
                 for i in 0..2 {
@@ -133,12 +131,11 @@ impl SKINNYee {
             }
             for z in 1..=TK {
                 let flattened_tk = &round_tweakey[z].values;
-                let permuted = (0..16)
-                    .map(|idx| flattened_tk[INV_PT[idx]])
-                    .collect::<Vec<_>>();
-                round_tweakey[z] = Matrix::new(4, 4, permuted);
+                for idx in 0..16 {
+                    permuted[idx] = flattened_tk[INV_PT[idx]]
+                }
+                swap(&mut round_tweakey[z].values, &mut permuted);
             }
-
             round_tweakeys.push(round_tweakey.clone());
         }
         round_tweakeys
@@ -338,7 +335,7 @@ impl SymmetricCipher<Matrix<u8>, Matrix<u8>> for SKINNYee {
         let rc = self.generate_constants(rc_init);
         for round_num in 0..self.nr() {
             self.sub_cells(plaintext);
-            self.add_constants(plaintext,  &rc[round_num]);
+            self.add_constants(plaintext, &rc[round_num]);
             self.add_round_key(plaintext, &round_tweak_keys[round_num], &key[round_num % 4]);
             self.shift_rows(plaintext);
             self.mix_columns(plaintext);
@@ -449,6 +446,7 @@ mod tests {
             }
         }
     }
+
     #[test]
     fn test_inv_keyschedule_skinnyee() {
         let skinny = SKINNYee::default();
@@ -481,5 +479,4 @@ mod tests {
         let first_inv_tweak = tki_to_tweakey(inv_tks.last().unwrap());
         assert_eq!(first_inv_tweak, tweakey);
     }
-
 }
