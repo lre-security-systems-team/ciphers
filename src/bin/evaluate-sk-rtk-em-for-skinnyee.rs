@@ -52,7 +52,7 @@ fn main() -> io::Result<()> {
     let e0_input_difference = dc.e0_em.x[dc.r0 - dc.rm].iter().flatten().cloned().collect::<Vec<_>>();
     let e0_input_difference = Matrix::new(4, 4, e0_input_difference);
 
-    let e1_output_difference = dc.em_e1.x[dc.rm + 1].iter().flatten().cloned().collect::<Vec<_>>();
+    let e1_output_difference = dc.em_e1.x[dc.rm].iter().flatten().cloned().collect::<Vec<_>>();
     let e1_output_difference = Matrix::new(4, 4, e1_output_difference);
 
     let e0_tk0_difference = dc.e0_em.tk[0][dc.r0 - dc.rm].clone();
